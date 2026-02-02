@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <jpeglib.h>
-#include "structs.c"
 #include <png.h>
 
 /*
@@ -11,6 +10,7 @@ created 30/01/26
 
 TODO:
 change malloc to have coninous memory
+change to have type system be more refined using string or structs
 */
 
 
@@ -19,9 +19,19 @@ change malloc to have coninous memory
 
 
 */
+typedef struct 
+{
+    int height;
+    int width;
+    int pixel_length;
+    unsigned char ** pixel_buff;
+}raw_image_data;
+
+
+
 raw_image_data read_jpeg_file(char * imageName){
     raw_image_data data;
-    printf("1");
+    data.pixel_length=3;
     FILE *pJpeg = fopen(imageName, "rb");
     if (pJpeg == NULL){
         printf("no image found");
@@ -34,35 +44,35 @@ raw_image_data read_jpeg_file(char * imageName){
     
 
     unsigned long bmp_size;
-    JSAMPARRAY  bmp_buffer;
+    unsigned char **  bmp_buffer;
     int row_stride;
-    printf("2");
+    
     cinfo.err = jpeg_std_error(&jerr);	
     jpeg_create_decompress(pinfo);
     jpeg_stdio_src(pinfo,pJpeg);
     jpeg_read_header(pinfo, TRUE);
     jpeg_start_decompress(pinfo);
-    printf("3");
+    
     
     
     int width = cinfo.image_width;
     int height= cinfo.image_height;
 
     row_stride = width * 3;
-    printf("4");
-    bmp_buffer = (cinfo.mem->alloc_sarray)((j_common_ptr) pinfo, JPOOL_IMAGE, row_stride, height);
-    printf("5");
 
+
+    
+    //bmp_buffer = (cinfo.mem->alloc_sarray)((j_common_ptr) pinfo, JPOOL_IMAGE, row_stride, height);
+    
+
+    bmp_buffer = (unsigned char**)malloc(sizeof(unsigned char*)*height);
+    for (int y = 0; y < height ;y++){
+        bmp_buffer[y]= (unsigned char*)malloc(row_stride);
+    }
     
     for (int y = 0; y <height; y++){
         jpeg_read_scanlines(pinfo , &bmp_buffer[y], 1);  
         
-    }
-
-    for (int y = 0; y <height; y++){
-        for (int x = 0; x <row_stride; x++){
-            
-        }
     }
     
     data.width=width;
@@ -81,14 +91,10 @@ raw_image_data read_jpeg_file(char * imageName){
 
 
 
-
-
-
-
-
 //png reader that takes info form a png and converts it into 255RGBa format and returns it back
 raw_image_data read_png_file(char *imageName) {
     raw_image_data data;
+    data.pixel_length=4;
     FILE *pPng = fopen(imageName, "rb");
 
     png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
@@ -138,12 +144,12 @@ raw_image_data read_png_file(char *imageName) {
 
 
     
-    png_bytep *pimage_data = NULL;
+    unsigned char ** pimage_data = NULL;
 
     // setup image structure
-    pimage_data= (png_bytep*)malloc(sizeof(png_bytep)*height);
+    pimage_data= (unsigned char**)malloc(sizeof(unsigned char*)*height);
     for (int y = 0; y <height; y++){
-        pimage_data[y] = (png_byte*)malloc(png_get_rowbytes(png,info));     
+        pimage_data[y] = (unsigned char*)malloc(png_get_rowbytes(png,info));     
     }
     // put details into that image structure
     png_read_image(png, pimage_data);
