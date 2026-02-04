@@ -14,9 +14,12 @@ TODO:
 allow cmd line as input
 implement zooming 
 add a fixed size implementation flag
+
 */
 
-//load a image file and present using sdl2
+/*load a image file and present using sdl2.
+returns 0 if failed or 1 if sucessful
+*/
 int main(int argc, char * argv[]){
     char fileName[260] = "";
     raw_image_data image_data;
@@ -60,21 +63,20 @@ int main(int argc, char * argv[]){
         printf("Error renderer creation");
         return 0;
     }
-    /*
-    make texture conditional to not only include SDL_PIXELFORMAT_RGBA8888
-    */
+
     SDL_Texture * image; 
     
-    /*Use 
-    make data storage contigous as it requires pixel_data to be *
-    
-    */
+  
+
     
     SDL_SetRenderTarget( renderer, image );
     
     //!!TODOGET RID OF MAGIC NUMBER 
     if(image_data.pixel_length == rgba ){
         image = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, width, height);
+        if (image == NULL){
+            printf("SDL texture creation error");
+        }
 
         SDL_UpdateTexture(image, NULL, pixel_data, width*rgba);
 
@@ -82,6 +84,9 @@ int main(int argc, char * argv[]){
     
     if(image_data.pixel_length == rgb){
         image = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_TARGET, width, height);
+        if (image == NULL){
+            printf("SDL texture creation error");
+        }
 
         SDL_UpdateTexture(image, NULL, pixel_data, width*rgb);
         
@@ -114,5 +119,5 @@ int main(int argc, char * argv[]){
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
-    return 0;
+    return 1;
 }
