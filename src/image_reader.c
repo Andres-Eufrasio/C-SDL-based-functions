@@ -9,9 +9,7 @@ by Andres Eufrasio Tinajero
 created 30/01/26
 
 TODO:
-change malloc to have coninous memory
-change to have type system be more refined using string or structs
-*/
+add bmp file
 
 
 
@@ -24,7 +22,7 @@ typedef struct
     int height;
     int width;
     int pixel_length;
-    unsigned char ** pixel_buff;
+    unsigned char * pixel_buff;
 }raw_image_data;
 
 
@@ -43,9 +41,7 @@ raw_image_data read_jpeg_file(char * imageName){
     struct jpeg_error_mgr jerr;
     
 
-    unsigned long bmp_size;
-    unsigned char **  bmp_buffer;
-    int row_stride;
+    int stride;
     
     cinfo.err = jpeg_std_error(&jerr);	
     jpeg_create_decompress(pinfo);
@@ -58,29 +54,32 @@ raw_image_data read_jpeg_file(char * imageName){
     int width = cinfo.image_width;
     int height= cinfo.image_height;
 
-    row_stride = width * 3;
+    stride = width * 3;
 
 
     
-    //bmp_buffer = (cinfo.mem->alloc_sarray)((j_common_ptr) pinfo, JPOOL_IMAGE, row_stride, height);
-    
+    unsigned char **  pimage;
+    unsigned char * buffer;
 
-    bmp_buffer = (unsigned char**)malloc(sizeof(unsigned char*)*height);
+
+    buffer = (unsigned char*)malloc(sizeof(unsigned char)*height*stride);
+    pimage = (unsigned char**)malloc(sizeof(unsigned char*)*height);
+
     for (int y = 0; y < height ;y++){
-        bmp_buffer[y]= (unsigned char*)malloc(row_stride);
+        pimage[y]= buffer + (y * stride);
     }
     
     for (int y = 0; y <height; y++){
-        jpeg_read_scanlines(pinfo , &bmp_buffer[y], 1);  
+        jpeg_read_scanlines(pinfo , &pimage[y], 1);  
         
     }
     
     data.width=width;
     data.height=height;
-    data.pixel_buff=bmp_buffer;
+    data.pixel_buff=buffer;
 
 
-    
+    free(pimage);
     jpeg_destroy_decompress(pinfo);
     fclose(pJpeg);
 
@@ -145,23 +144,26 @@ raw_image_data read_png_file(char *imageName) {
 
     
     unsigned char ** pimage_data = NULL;
-
+    unsigned char * buffer = NULL;
+    int stride = png_get_rowbytes(png,info);
+    buffer = (unsigned char*)malloc(stride*height);
     // setup image structure
     pimage_data= (unsigned char**)malloc(sizeof(unsigned char*)*height);
-    for (int y = 0; y <height; y++){
-        pimage_data[y] = (unsigned char*)malloc(png_get_rowbytes(png,info));     
+    for (int y = 0; y < height; y++) {
+        pimage_data[y] = buffer + (y * stride);
     }
+
     // put details into that image structure
     png_read_image(png, pimage_data);
 
-
-
+    
+    
     
     data.height = height;
     data.width = width;
-    data.pixel_buff = pimage_data;
+    data.pixel_buff = buffer;
     
-
+    free(pimage_data);
     fclose(pPng);
     png_destroy_read_struct(&png, &info, NULL);
     return data;
