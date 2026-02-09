@@ -1,5 +1,5 @@
 #include "image_reader.c"
-#include <SDL2/SDL.H>
+#include <SDL2/SDL.h>
 #define rgba 4
 #define rgb 3
 
