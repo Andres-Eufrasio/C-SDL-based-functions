@@ -13,11 +13,21 @@ created 29/01/26
 TODO:
 
 finish implement zooming 
+add --help
 
 add a fixed size implementation flag
 - fix feature where movement unavailable when too zoomed in 
 */
 
+
+
+
+
+
+
+void keep_texure_on_render(){
+
+}
 
 /*load a image file and present using sdl2.
 use argument filename to select a file
@@ -31,7 +41,7 @@ int main(int argc, char * argv[]){
     SDL_Renderer * renderer;
     SDL_Texture * texture; 
 
-    // create i/o subsystem in this case for video
+
     SDL_Init(SDL_INIT_VIDEO);
     
     if (argc == 1){
@@ -42,8 +52,9 @@ int main(int argc, char * argv[]){
         return 0;
     }   
     }
-    else{
-        strcpy(fileName, argv[1]);
+    else if (argc == 2){
+        strncpy(fileName, argv[1], 259);
+        SDL_Delay(2000);
     }
 
 
@@ -68,8 +79,18 @@ int main(int argc, char * argv[]){
     int height = image_data.height;
     unsigned char * pixel_data = image_data.pixel_buff;
     
+    
     // create the display
-    window = SDL_CreateWindow(fileName,  SDL_WINDOWPOS_CENTERED,  SDL_WINDOWPOS_CENTERED, width+150, height+100, SDL_WINDOW_RESIZABLE);   
+    if (width<100 || height <100){
+    window = SDL_CreateWindow(fileName,  SDL_WINDOWPOS_CENTERED,  SDL_WINDOWPOS_CENTERED, 200, 100, SDL_WINDOW_RESIZABLE);   
+    }
+    else if (width>1920 || height >1080){
+        window = SDL_CreateWindow(fileName,  SDL_WINDOWPOS_CENTERED,  SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_RESIZABLE);   
+    }
+    else{
+        window = SDL_CreateWindow(fileName,  SDL_WINDOWPOS_CENTERED,  SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_RESIZABLE);   
+    }
+    
     // create render function that allows the window to be rendered upon
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (renderer == NULL) {
@@ -82,14 +103,14 @@ int main(int argc, char * argv[]){
     
 
     
-    SDL_SetRenderTarget( renderer, texture );
-    SDL_RenderSetLogicalSize(renderer, width,height );
+
+    SDL_RenderSetLogicalSize(renderer, width, height);
     
     
+    printf("\n");
     if(image_data.pixel_length == rgba ){
-        texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, width, height);
+        texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, width, height);
         if (texture == NULL){
-            printf("SDL texture creation error");
         }
 
         SDL_UpdateTexture(texture, NULL, pixel_data, width*rgba);
@@ -97,9 +118,8 @@ int main(int argc, char * argv[]){
     }
     
     if(image_data.pixel_length == rgb){
-        texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_TARGET, width, height);
+        texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STATIC, width, height);
         if (texture == NULL){
-            printf("SDL texture creation error");
         }
 
         SDL_UpdateTexture(texture, NULL, pixel_data, width*rgb);
@@ -107,8 +127,7 @@ int main(int argc, char * argv[]){
     };
     free(pixel_data);
     
-    // render back onto window
-    SDL_SetRenderTarget( renderer, NULL );
+
     
     
     float zoom_amount = 1;
@@ -133,6 +152,7 @@ int main(int argc, char * argv[]){
             if (e.type == SDL_MOUSEWHEEL){
                 old_w = rect_t.w;
                 old_h = rect_t.h;
+                // zoom in 
                 if (e.wheel.preciseY > 0){
                     zoom_amount+= 0.10;
 
@@ -143,10 +163,20 @@ int main(int argc, char * argv[]){
                     rect_t.x = rect_t.x - (rect_t.w-old_w)/2;
                     rect_t.y = rect_t.y - (rect_t.h-old_h)/2;
                 }
+                // zoom out
                 else{
-                    if (zoom_amount > 0){
-                        zoom_amount -=0.10;
+                    
+                    if (zoom_amount > 1){
+                        zoom_amount -=0.10;                        
                     }
+                    else{
+                        zoom_amount = 1;
+                        rect_t.x = 0;
+                        rect_t.y = 0;
+
+                    }
+
+
                     
                     rect_t.h  = height*zoom_amount;
                     rect_t.w = width*zoom_amount;
@@ -156,19 +186,20 @@ int main(int argc, char * argv[]){
 
 
                 }
-                /*  
-                if (rect_t.x+rect_t.w > width){
-                    rect_t.x = width - rect_t.x+rect_t.w ;
-                    
+
+                if (rect_t.x>0){
+                    rect_t.x = 0;
                 }
-                if (rect_t.y+rect_t.h > height){
-                    rect_t.y=height - rect_t.y+rect_t.h;
+                if (rect_t.y>0){
+                    rect_t.y = 0;
                 }
-                    */
-                //rect_t.x = (width - rect_t.w) / 2;
-                //rect_t.y = (height - rect_t.h) / 2;
-                //rect_t.x = (zoom_amount * rect_t.w)/10;
-                //rect_t.y = (zoom_amount * rect_t.h) /10;
+                if (rect_t.y+rect_t.h<height){
+                     rect_t.y = height-rect_t.h;
+                }
+                if (rect_t.x+rect_t.w<width){
+                     rect_t.x = width-rect_t.w;
+                }         
+
             }
             if (e.type == SDL_MOUSEBUTTONDOWN){
                 buttonDown = 1;
@@ -178,27 +209,30 @@ int main(int argc, char * argv[]){
             }
             if (e.type == SDL_MOUSEMOTION && buttonDown == 1){
                 //printf("%d",e.motion.xrel);
-                if (rect_t.x+e.motion.xrel > 0 && rect_t.x+rect_t.w+e.motion.xrel < width){
-                    rect_t.x+= e.motion.xrel ;
-                }
-                
 
-                if (rect_t.y+e.motion.yrel > 0 && rect_t.y+rect_t.h+e.motion.yrel < height){
-                    rect_t.y+=e.motion.yrel ;
-                }
-
+                // allow movment only on zoom in
                 if (zoom_amount>1){
                     rect_t.x+= e.motion.xrel ;
+                    rect_t.y+=e.motion.yrel;
                 }
 
-                if (zoom_amount>1){
-                    rect_t.y+=e.motion.yrel ;
-                }    
+                if (rect_t.x>0){
+                    rect_t.x = 0;
+                }
+                if (rect_t.y>0){
+                    rect_t.y = 0;
+                }
+                if (rect_t.y+rect_t.h<height){
+                     rect_t.y = height-rect_t.h;
+                }
+                if (rect_t.x+rect_t.w<width){
+                     rect_t.x = width-rect_t.w;
+                }                
 
                 
             }
             
-
+            //printf("%d-",rect_t.y+rect_t.h);
             
             
             
