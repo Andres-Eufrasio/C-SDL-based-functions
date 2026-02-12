@@ -2,6 +2,7 @@
 #include <SDL2/SDL.h>
 #define rgba 4
 #define rgb 3
+#define PATHSIZE 260
 
 
 
@@ -35,7 +36,7 @@ returns 0 if failed or 1 if sucessful
 */
 int main(int argc, char * argv[]){
     
-    char fileName[260] = "";
+    char fileName[PATHSIZE] = "";
     raw_image_data image_data;
     SDL_Window * window;
     SDL_Renderer * renderer;
@@ -53,8 +54,7 @@ int main(int argc, char * argv[]){
     }   
     }
     else if (argc == 2){
-        strncpy(fileName, argv[1], 259);
-        SDL_Delay(2000);
+        strncpy(fileName, argv[1], PATHSIZE-1);
     }
 
 

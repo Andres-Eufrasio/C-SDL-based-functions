@@ -4,14 +4,14 @@
 #include <png.h>
 
 /*
-/*load a png and jpeg files contents and and return values
+load a png and jpeg files contents and and return values
 by Andres Eufrasio Tinajero
 created 30/01/26
 
 TODO:
 add bmp file
 
-
+*/
 
 /*Read a jpeg file and return back a rgb data and size
 

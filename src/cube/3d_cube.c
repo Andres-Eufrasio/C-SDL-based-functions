@@ -1,5 +1,6 @@
 /*Generate a image of a cube using sdl and rotate it
 Created 05/02/26
+by Andres Eufrasio Tinajero
 
 */
 #include <stdlib.h>
@@ -119,9 +120,10 @@ int main(int argc, char * argv[]){
             points[((index + 1) % 4) + 4].x, points[((index + 1) % 4) + 4].y
         );
     }
-
+    for (int i = 0; i < 2; i++){
+    points3d[i]=rotateCube(points3d[i],0.0f,0.40f,0.0);
+    }
     SDL_SetRenderTarget( renderer, NULL);
-
     while (1) {
         SDL_Event e;
         if (SDL_PollEvent(&e)) {
@@ -136,9 +138,7 @@ int main(int argc, char * argv[]){
         SDL_Delay(10);
         SDL_RenderClear(renderer);
         SDL_SetRenderTarget(renderer, texture);
-        for (int i = 0; i < 8; i++){
-        points3d[i]=rotateCube(points3d[i],0.0f,0.40f,0.0);
-        }
+
         
         
         point_2d projected_points[8];

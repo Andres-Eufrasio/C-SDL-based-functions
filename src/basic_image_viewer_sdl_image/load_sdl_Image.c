@@ -6,7 +6,7 @@ basic CMD image loader for windows using SDL and SDL image
 */
 
 #include <stdio.h>
-#include <SDL2/SDL.H>
+#include <SDL2/SDL.h>
 #include <stdbool.h>
 #include <SDL2/SDL_image.h>
 
